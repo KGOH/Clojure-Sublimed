@@ -81,7 +81,7 @@ class ConnectionSocketRepl(cs_conn.Connection):
         msg += '}'
         self.send(msg)
 
-    def eval(self, view, sel):
+    def eval(self, view, sel, wrap_fstr=None):
         cs_warn.reset_warnings(self.window)
         for region in sel:
             # find regions to eval
@@ -100,11 +100,16 @@ class ConnectionSocketRepl(cs_conn.Connection):
             for idx, form in enumerate(forms):
                 eval = cs_eval.Eval(view, form, id = f'{batch_id}.{idx}', batch_id = batch_id)
 
+            code = view.substr(region)
+            if wrap_fstr is not None:
+                code = wrap_fstr%code
+            code = code.replace('\\', '\\\\').replace('"', '\\"')
+
             # send msg
             (line, column) = view.rowcol_utf16(region.begin())
             form = cs_common.Form(
                 id   = batch_id,
-                code = view.substr(region).replace('\\', '\\\\').replace('"', '\\"'),
+                code = code,
                 ns   = cs_parser.namespace(view, region.begin()) or 'user',
                 line = line + 1,
                 column = column,
