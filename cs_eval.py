@@ -295,9 +295,20 @@ class ClojureSublimedEval(sublime_plugin.TextCommand):
     """
     Eval selected code or topmost form is selection is collapsed
     """
-    def run(self, edit, wrap_fstr=None):
+    def run(self, edit):
         state = cs_common.get_state(self.view.window())
-        state.conn.eval(self.view, self.view.sel(), wrap_fstr)
+        state.conn.eval(self.view, self.view.sel())
+
+    def is_enabled(self):
+        return cs_conn.ready(self.view.window())
+
+class ClojureSublimedEvalWithWrapCommand(sublime_plugin.TextCommand):
+    """
+    Wrap selected code or topmost form with format string and eval
+    """
+    def run(self, edit, wrap_fstr):
+        state = cs_common.get_state(self.view.window())
+        state.conn.eval(self.view, self.view.sel(), wrap_fn=(lambda code, _eval_region, _sel_region: wrap_fstr%code))
 
     def is_enabled(self):
         return cs_conn.ready(self.view.window())
